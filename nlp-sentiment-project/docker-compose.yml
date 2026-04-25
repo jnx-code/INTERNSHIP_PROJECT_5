@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: sentiment_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/models:/app/src/models       # persist trained model
+      - ./src/data_processing:/app/src/data_processing  # persist tokenizer
+      - ./data:/app/data                   # dataset
+      - ./docs:/app/docs                   # metrics & plots
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: lightweight monitoring UI (cadvisor)
+  # cadvisor:
+  #   image: gcr.io/cadvisor/cadvisor:latest
+  #   ports: ["8080:8080"]
+  #   volumes:
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:ro
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
